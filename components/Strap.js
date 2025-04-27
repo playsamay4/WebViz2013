@@ -110,6 +110,7 @@ export class Strap {
     async init() {
         this.ctr = new PIXI.Container();
         this.ctr.label = "Strap";
+        this.ctr.y = 112;
 
         this.createBacking();
         this.createMask();
