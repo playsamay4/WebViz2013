@@ -30,9 +30,8 @@ export class Tile {
   async in() {
     if (this.isIn) return false;
 
-    await vizEvents.emit('headline:out');
-    await vizEvents.emit('logo:out');
-    await vizEvents.emit('ticker:out');
+    
+    vizEvents.emit('logo:out'); 
     await vizEvents.emit('strap:out');
 
     this.isIn = true;

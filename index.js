@@ -8,11 +8,8 @@ import { Strap } from "./components/Strap.js";
 import { getTimeStr } from "./utils/textUtils.js";
 
 window.devToolsEnabled = false;
-var strapColor = {color: 0xb80000, alpha: 1};
-//var strapColor = {color: 0x000000, alpha: 0.8}
 
-
-document.body.style.backgroundColor = "#00000000";
+document.body.style.backgroundColor = "#000022FF";
 
 
 const ws = initializeWebSocket();
@@ -31,7 +28,7 @@ await app.init({ antialias: true, backgroundAlpha:0 , resizeTo: window, width: 1
 
 
 const templateTexture = await PIXI.Assets.load('twoline.png');
-const template = new PIXI.Sprite(templateTexture); template.alpha = 1;
+const template = new PIXI.Sprite(templateTexture); template.alpha = 0;
 app.stage.addChild(template);
 
 
