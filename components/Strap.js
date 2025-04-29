@@ -851,7 +851,6 @@ export class Strap {
     }
 
     async out() {
-        console.log("9")
         if (this.currentState === this.STATES.OFF) return;
         RemoveFromGraphicsStatus("HEAD")
 
