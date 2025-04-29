@@ -908,7 +908,6 @@ export class Strap {
 
                     RemoveFromGraphicsStatus("[STRAP]");
                     this.currentState = this.STATES.OFF;
-                    console.log("6")
                     resolve();
                 }
             });
