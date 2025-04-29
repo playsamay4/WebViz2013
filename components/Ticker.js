@@ -31,11 +31,11 @@ export class Ticker {
   }
 
   createBacking() {
-    const backing = new PIXI.Graphics();
-    backing.rect(TICKER_X, TICKER_Y, TICKER_WIDTH, TICKER_HEIGHT);
-    backing.fill(0x4C0000);
-    backing.alpha = 1;
-    this.ctr.addChild(backing);
+    this.backing = new PIXI.Graphics();
+    this.backing.rect(TICKER_X, TICKER_Y, TICKER_WIDTH, TICKER_HEIGHT);
+    this.backing.fill(0x4C0000);
+    this.backing.alpha = 1;
+    this.ctr.addChild(this.backing);
   }
 
   createMask() {
@@ -50,55 +50,180 @@ export class Ticker {
   createContent() {
     this.tickerContent = new PIXI.Container();
     this.tickerContent.label = "Ticker Content";
-
-    const markerText = new PIXI.Text("HEADLINES", {
-      fill: "#4c0000",
-      fontFamily: 'Helvetica',
-      fontSize: 33,
-      fontWeight: "bold"
-    });
-    markerText.resolution = 2;
-    markerText.x = TICKER_X + 10;
-    markerText.y = TICKER_Y + 4;
-
-    const markerBox = new PIXI.Graphics();
-    markerBox.rect(TICKER_X, TICKER_Y, markerText.width + 20, TICKER_HEIGHT);
-    markerBox.fill(0xFFFFFF);
-    markerBox.alpha = 1;
-
-    const headlinesText = new PIXI.Text(
-      "MINISTERIAL TALKS IN PARIS ON THE UKRAINE CRISIS WERE \"TOUGH \" BUT WILL CONTINUE, THE US SAYS, AS A TENSE STAND-OFF CONTINUE IN CRIMEA ● VENEZUELA'S PRESIDENT NICOLAS MADURO BREAKS DIPLOMATIC RELATIONS WITH PANAMA OVER ITS REQUEST FOR THE OAS TO DISCUSS THE CRISIS IN VENEZUELA",
-      {
-        fill: "#ffffff",
-        fontFamily: 'Helvetica',
-        fontWeight: "bold",
+  
+    const tickerData = [
+      "[BREAKING]",
+      "MANCHESTER UNITED ARE RUBBISH",
+      "[HEADLINES]",
+      "SUSPECT CHARGED AFTER VANCOUVER CAR RAMMIN LEAVES 11 DEAD",
+      "WEATHER RAIN EVERYWHERE",
+      "[MORE NEWS AT]",
+      "bbc.com/news",
+      "facebook.com/bbcnews",
+      "TWITTER: @BBCWorld AND @BBCBreaking",
+    ];
+  
+    const styles = {
+      label: {
+        fill: "#4c0000",
+        fontFamily: 'Helvetica Neue',
         fontSize: 33,
+        fontWeight: "bold"
+      },
+      content: {
+        fill: "#ffffff",
+        fontFamily: 'Helvetica Neue',
+        fontSize: 33,
+        fontWeight: "bold",
         letterSpacing: 1.5
+      },
+      bullet: {
+        fill: "#ffffff",
+        fontFamily: 'Helvetica Neue',
+        fontSize: 33,
+        fontWeight: "bold"
       }
-    );
-    headlinesText.resolution = 2;
-    headlinesText.x = markerText.x + markerText.width + 30;
-    headlinesText.y = markerText.y;
+    };
+  
+    const makeTickerBlock = () => {
+      const block = new PIXI.Container();
+      let x = TICKER_X;
+      const y = TICKER_Y + 2;
+      const padding = 30;
+      const bulletGap = 60;
+    
+      let inBreaking = false;
+      let breakingStartX = null;
+      let breakingEndX = null;
+      let breakingOnly = false;
+    
+      // Check if tickerData has only one label and it's BREAKING
+      const allLabels = tickerData.filter(line => /^\[.*\]$/.test(line));
+      if (allLabels.length === 1 && allLabels[0].toUpperCase() === "[BREAKING]") {
+        breakingOnly = true;
+      }
+    
+      for (let i = 0; i < tickerData.length; i++) {
+        const isLabel = /^\[.*\]$/.test(tickerData[i]);
+        const labelTextRaw = tickerData[i].replace(/\[|\]/g, "");
+        const isBreakingLabel = labelTextRaw.toUpperCase() === "BREAKING";
+    
+        const isContent = !isLabel;
+        const styleToUse = isLabel
+          ? (isBreakingLabel ? { ...styles.label, fill: 0x8B0000 } : styles.label)
+          : styles.content;
+    
+        // Handle [BREAKING] logic
+        if (isBreakingLabel) {
+          inBreaking = true;
+          breakingStartX = x;
+        } else if (isLabel && inBreaking) {
+          breakingEndX = x;
+          inBreaking = false;
+        }
+    
+        // Draw label text
+        if (isLabel) {
+          const labelText = new PIXI.Text(labelTextRaw, styleToUse);
+          labelText.resolution = 2;
+          labelText.x = x;
+          labelText.y = y;
+    
+          const box = new PIXI.Graphics();
+          box.rect(x - 10, TICKER_Y, labelText.width + 20, TICKER_HEIGHT);
+          box.fill(0xFFFFFF);
+          block.addChild(box);
+          block.addChild(labelText);
+    
+          x += labelText.width + padding;
+          continue; // Skip bullets for labels
+        }
+    
+        // Draw content text
+        const textItem = new PIXI.Text(labelTextRaw, styleToUse);
+        textItem.resolution = 2;
+        textItem.x = x;
+        textItem.y = y;
+        block.addChild(textItem);
+        x += textItem.width;
+    
+        // Add bullet between normal content
+        const next = tickerData[i + 1];
+        const nextIsLabel = /^\[.*\]$/.test(next || "");
+    
+        if (!isLabel && next && !nextIsLabel) {
+          x += bulletGap / 2;
+    
+          const bullet = new PIXI.Text("●", styles.bullet);
+          bullet.resolution = 2;
+          bullet.x = x;
+          bullet.y = y;
+          block.addChild(bullet);
+    
+          x += bullet.width + bulletGap / 2;
+        } else {
+          x += padding;
+        }
+      }
+    
+      // If breaking never ended, we were in a single [BREAKING] block to end
+      if (inBreaking && !breakingEndX) breakingEndX = x;
+    
+      this.backing.rect(TICKER_X, TICKER_Y, TICKER_WIDTH, TICKER_HEIGHT);
+      this.backing.fill(0x4C0000);
 
-    this.tickerContent.addChild(markerBox, markerText, headlinesText);
-    this.tickerContent.x = TICKER_WIDTH;
+      // Full red bar background if only [BREAKING]
+      if (breakingOnly) {
+        this.backing.rect(TICKER_X, TICKER_Y, TICKER_WIDTH, TICKER_HEIGHT);
+        this.backing.fill(0x8B0000);
+      }
+      // Regular [BREAKING] section background
+      else if (breakingStartX !== null && breakingEndX !== null) {
+        const redBG = new PIXI.Graphics();
+        redBG.rect(breakingStartX, TICKER_Y, breakingEndX - breakingStartX, TICKER_HEIGHT);
+        redBG.fill(0x8B0000);
+        redBG.zIndex = -1;
+        block.addChildAt(redBG, 0);
+      }
+    
+      return block;
+    };
+    
+  
+    const ticker1 = makeTickerBlock();
+    const ticker2 = makeTickerBlock();
+  
+    const loopGap = 100;
+    ticker2.x = ticker1.width + loopGap;
+  
+    this.tickerContent.addChild(ticker1, ticker2);
     this.ctr.addChild(this.tickerContent);
+  
+    this.fullTickerWidth = ticker1.width + loopGap;
   }
+  
+  
 
   initTickerScroll() {
+    this.tickerContent.x = TICKER_WIDTH;
+
     this.contentTicker = new PIXI.Ticker();
     this.contentTicker.add(() => {
       if (!this.isIn) return;
-
-      if (this.tickerContent.x < -this.tickerContent.width) {
-        this.tickerContent.x = TICKER_WIDTH;
+  
+      // Instead of waiting for whole container to go offscreen,
+      // restart when it finishes 1 scroll width
+      if (this.tickerContent.x <= -this.fullTickerWidth) {
+        this.tickerContent.x = 0;
       }
-
+  
       this.tickerContent.x -= SCROLL_SPEED * this.contentTicker.deltaTime;
     });
+  
     this.contentTicker.start();
     this.contentTicker.speed = SCROLL_SPEED;
   }
+  
 
   async tickerIn() {
     await vizEvents.emit('tile:out');

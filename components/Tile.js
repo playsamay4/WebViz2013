@@ -33,6 +33,7 @@ export class Tile {
     await vizEvents.emit('headline:out');
     await vizEvents.emit('logo:out');
     await vizEvents.emit('ticker:out');
+    await vizEvents.emit('strap:out');
 
     this.isIn = true;
 

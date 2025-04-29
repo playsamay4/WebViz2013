@@ -11,6 +11,10 @@ window.devToolsEnabled = false;
 var strapColor = {color: 0xb80000, alpha: 1};
 //var strapColor = {color: 0x000000, alpha: 0.8}
 
+
+document.body.style.backgroundColor = "#00000000";
+
+
 const ws = initializeWebSocket();
 if (ws) {
     window.ws = ws;
@@ -23,11 +27,10 @@ globalThis.__PIXI_APP__ = app;
 
 // Intialize the application.
 await app.init({ antialias: true, backgroundAlpha:0 , resizeTo: window, width: 1920, height: 1080 });
-
 //PIXI.Assets.addBundle('fonts', []); await PIXI.Assets.loadBundle('fonts');
 
 
-const templateTexture = await PIXI.Assets.load('head.png');
+const templateTexture = await PIXI.Assets.load('twoline.png');
 const template = new PIXI.Sprite(templateTexture); template.alpha = 1;
 app.stage.addChild(template);
 
@@ -55,7 +58,26 @@ const keyActionMap = new Map([
     ['s', () => tileComponent.out()],
 
     ['z', () => strapComponent.showHeadline("TRUMP VISITS BORDER")],
+    ['m', () => strapComponent.showBreakingBillboard("BREAKING NEWS")],
+    [',', () => strapComponent.showBreakingBillboard("POPE FRANCIS DIES")],
+    ['.', () => strapComponent.showBreakingText("POPE FRANCIS DIES AT 88", "The Vatican has announced the Pope died a short while ago")],
+
+
     ['x', () => strapComponent.out()],
+
+    ['c', () => strapComponent.showOneLine("FIRST LAST")],
+    ['v', () => strapComponent.showTwoLine("JOIN THE DEBATE", "How do you feel about Huawei smartphones? #BBCBizLive")],
+    ['f', () => strapComponent.showTwoLine("NAME", "Designation")],
+    
+    ['o', () => strapComponent.hideLeftNewsTab()],
+    ['p', () => strapComponent.showLeftNewsTab("NEWS IN BRIEF",  0x8C0000, 0xFFFFFF, true)],
+    ['[', () => strapComponent.showLeftNewsTab("G M T",  0x65396E, 0xFFFFFF, false)],
+    [']', () => strapComponent.showLeftNewsTab("OUTSIDE SOURCE",  0x0586EA, 0xFFFFFF, false)],
+
+
+
+    
+
 
 
 ]);
@@ -126,7 +148,50 @@ const messageHandlers = {
     ".5{OUT}": () => {
       tileComponent.out();
       RemoveFromGraphicsStatus(".5");
-    }
+    },
+    "NAME": (msg) => {
+        var parts = msg.data.split("\\");
+        
+        if(parts.length == 1)
+        {
+            
+            strapComponent.showOneLine(parts[0].toUpperCase());
+            
+            AddToGraphicsStatus(msg.overlayType, msg.type, parts[0]);
+        }
+        else if(parts.length == 2)
+        {
+            strapComponent.showTwoLine(parts[0], parts[1]);
+            AddToGraphicsStatus(msg.overlayType, msg.type, parts[0] + "\\" + parts[1]);
+        }
+    },
+    "NAME{OUT}": () => {
+        strapComponent.out();
+        RemoveFromGraphicsStatus("NAME");
+    },
+    "HEAD": async (msg) => {
+      console.log("A")
+        await strapComponent.showHeadline( msg.data.toUpperCase());
+        console.log("C")
+        AddToGraphicsStatus(msg.overlayType, msg.type, msg.data);
+    },
+    "HEAD{OUT}": () => {
+      console.log("B")
+        strapComponent.out();
+        //RemoveFromGraphicsStatus("HEAD");
+    },
+    "STRAP": (msg) => {
+      var parts = msg.data.split("\\");
+
+        strapComponent.showTwoLine(parts[0], parts[1]);
+        AddToGraphicsStatus(msg.overlayType, msg.type, parts[0] + "\\" + parts[1]);
+    },
+    "STRAP{OUT}": () => {
+        strapComponent.out();
+        RemoveFromGraphicsStatus("STRAP");
+    },
+    
+
 };
   
   window.parseMsg = async (evt) => {
