@@ -31,8 +31,9 @@ export class Tile {
     if (this.isIn) return false;
 
     
-    vizEvents.emit('logo:out'); 
-    await vizEvents.emit('strap:out');
+    
+    vizEvents.emit('strap:out');
+    await vizEvents.emit('logo:out'); 
 
     this.isIn = true;
 
