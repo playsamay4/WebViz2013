@@ -466,7 +466,7 @@ export class Strap {
     async setupBreakingLoop() {
         const loadPromises = [];
         for (let i = 0; i < 1250; i++) {
-            loadPromises.push(PIXI.Assets.load(`BREAKING_LOOP/loop_${i.toString().padStart(5, '0')}.jpg`));
+            loadPromises.push(PIXI.Assets.load(`BREAKING_LOOP/LOOP_${i.toString().padStart(5, '0')}.jpg`));
         }
         this.breakingStrapImgSequence = await Promise.all(loadPromises);
 
