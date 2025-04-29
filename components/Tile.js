@@ -32,8 +32,10 @@ export class Tile {
 
     
     
-    vizEvents.emit('strap:out');
-    await vizEvents.emit('logo:out'); 
+  await Promise.all([
+    vizEvents.emit('strap:out'),
+    vizEvents.emit('logo:out')
+  ]);
 
     this.isIn = true;
 
